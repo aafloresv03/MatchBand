@@ -1,0 +1,108 @@
+# MatchBand
+Plataforma de conexión para músicos
+
+**TFG** – Aplicación para fomentar colaboraciones musicales
+
+## Descripción del proyecto
+
+MatchBand es una aplicación diseñada para facilitar la conexión entre músicos con intereses comunes.
+El objetivo principal es ofrecer un espacio donde artistas puedan descubrir nuevos talentos, colaborar, compartir música y expandir su red artística.
+
+La plataforma permite al usuario crear un **Perfil musical**, mostrar sus habilidades, escuchar trabajos de otros artistas y, en versiones premium, contactar para colaboraciones directas.
+
+## Objetivos
+
+* Impulsar colaboraciones reales entre músicos.
+* Proporcionar un entorno intuitivo para conocer nuevos artistas.
+* Ofrecer herramientas de creación de **Perfil** y **portfolio musical**.
+* Permitir a los usuarios descubrir nuevas canciones y proyectos.
+* Crear una base para futuras funcionalidades premium.
+
+## Funcionalidades principales
+
+### Onboarding / Registro
+
+* Pantalla de bienvenida.
+* Registro de usuario (correo/contraseña).
+* **Setup inicial del Perfil**:
+	+ Alias artístico.
+	+ Descripción personal.
+	+ Instrumentos, experiencia y forma de aprendizaje.
+	+ Géneros musicales que domina.
+    
+### Home
+
+* Tarjeta principal del Perfil.
+* Acceso rápido a secciones de la aplicación.
+### Explora+
+
+* Descubrimiento de canciones destacadas.
+* Secciones: "Mejores colaboraciones" y "Trending".
+* Acceso a ficha detallada de canción.
+### Perfil de artista
+
+* Portada amplia visual.
+* Datos del artista.
+* Lista de colaboraciones realizadas.
+* Instrumentos y géneros asociados.
+### Solicitudes (Requests)
+
+* Sustituye a la pantalla de chat tradicional.
+* Lista de solicitudes recibidas.
+* Visualización de proyectos activos.
+* Posibilidad de abrir una solicitud y ver más detalles.
+### Request Open – Detalle de solicitud
+
+* Información del artista solicitante.
+* Descripción de la propuesta musical.
+* Acceso a redes sociales y contacto directo (email).
+* Botones de acción según tipo de cuenta:
+	+ Free: solo visualizar si ya hay match.
+	+ Premium: contacto abierto + propuesta libre.
+
+## Tecnologías utilizadas
+
+* Área	Stack
+* Diseño UI/UX	Figma
+* Desarrollo app	FlutterFlow / Flutter
+* Prototipado	Navegación interactiva integrada en Figma
+* Documentación	PDF / Memoria TFG
+
+## Identidad visual
+
+* Colores corporativos (inspirados en el logo)
+	+ #FF7A3D – naranja principal (acentos, CTA)
+	+ #6A5AE0 – morado secundario
+	+ #1C1C1C – fondo oscuro base
+* Grises: #2A2A2A, #3A3A3A, #ECECEC
+* Tipografías recomendadas:
+	+ Titulares: Montserrat / Poppins Bold
+	+ Texto base: Roboto / Inter Regular
+
+# MatchBand/
+	+ assets/
+	+ screens/
+		- Start
+		- Login
+		- Register + Steps onboarding
+		- Home
+		- Explora+
+		- ExploraCanción
+		- Perfil
+		- Solicitudes + RequestOpen
+	+ README.md
+	+ Figma_project.fig
+
+## Futuras mejoras
+
+* Chat en tiempo real entre artistas.
+* Búsqueda por filtros avanzados (género, ubicación, instrumento etc.).
+* Marketplace de samples, stems y loops.
+* Sistema premium completo con solicitudes ilimitadas.
+* Integración de audio para subida de composiciones propias.
+
+## Autor
+
+Andrés Alberto Flores Velásquez
+Año 2025
+
