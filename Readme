@@ -83,3 +83,44 @@ app/
  ├── android/
  ├── ios/
  └── pubspec.yaml
+```
+
+---
+
+# Current Status
+
+Proyecto en desarrollo activo.
+
+Estado actual:
+
+- Sistema de autenticación funcional
+- Matchmaking funcional
+- Gestión de colaboraciones funcional
+- Arquitectura inicial completada
+
+Próximas funcionalidades:
+
+- Chat en tiempo real
+- Publicación de proyectos
+- Sistema de reputación
+- Upload de imágenes
+- Notificaciones push
+
+---
+
+# Installation
+
+```bash
+git clone https://github.com/aafloresv03/MatchBand.git
+cd MatchBand/app
+flutter pub get
+flutter run
+```
+
+---
+
+# Author
+
+Andrés Alberto Flores Velásquez
+
+TFG - Desarrollo de Aplicaciones Multiplataforma
