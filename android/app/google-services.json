@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "38909991505",
+    "project_id": "matchband-app",
+    "storage_bucket": "matchband-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:38909991505:android:22b4acba3950bc4680b670",
+        "android_client_info": {
+          "package_name": "com.matchband.app.match_band"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTRO8TVFG-KIt8_U5qRSkNS6kGE-G51Uc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
