@@ -1,107 +1,85 @@
 # MatchBand
-Plataforma de conexión para músicos
 
-**TFG** – Aplicación para fomentar colaboraciones musicales
+Plataforma móvil para conectar músicos, crear colaboraciones reales y publicar proyectos musicales.
 
-## Descripción del proyecto
+---
 
-MatchBand es una aplicación diseñada para facilitar la conexión entre músicos con intereses comunes.
-El objetivo principal es ofrecer un espacio donde artistas puedan descubrir nuevos talentos, colaborar, compartir música y expandir su red artística.
+# Overview
 
-La plataforma permite al usuario crear un **Perfil musical**, mostrar sus habilidades, escuchar trabajos de otros artistas y, en versiones premium, contactar para colaboraciones directas.
+MatchBand es una aplicación desarrollada con Flutter y Firebase orientada a facilitar colaboraciones entre artistas mediante un sistema de descubrimiento, match y gestión de proyectos.
 
-## Objetivos
+La plataforma permite:
 
-* Impulsar colaboraciones reales entre músicos.
-* Proporcionar un entorno intuitivo para conocer nuevos artistas.
-* Ofrecer herramientas de creación de **Perfil** y **portfolio musical**.
-* Permitir a los usuarios descubrir nuevas canciones y proyectos.
-* Crear una base para futuras funcionalidades premium.
+- Descubrir músicos compatibles
+- Crear matches mutuos
+- Gestionar colaboraciones activas
+- Publicar proyectos finalizados
+- Construir un perfil musical profesional
 
-## Funcionalidades principales
+---
 
-### Onboarding / Registro
+# Core Features
 
-* Pantalla de bienvenida.
-* Registro de usuario (correo/contraseña).
-* **Setup inicial del Perfil**:
-	+ Alias artístico.
-	+ Descripción personal.
-	+ Instrumentos, experiencia y forma de aprendizaje.
-	+ Géneros musicales que domina.
-### Home
+## Authentication & Onboarding
 
-* Tarjeta principal del Perfil.
-* Acceso rápido a secciones de la aplicación.
-### Explora+
+- Registro e inicio de sesión
+- Configuración de perfil artístico
+- Alias musical
+- Géneros musicales
+- Instrumentos y experiencia
 
-* Descubrimiento de canciones destacadas.
-* Secciones: "Mejores colaboraciones" y "Trending".
-* Acceso a ficha detallada de canción.
-### Perfil de artista
+---
 
-* Portada amplia visual.
-* Datos del artista.
-* Lista de colaboraciones realizadas.
-* Instrumentos y géneros asociados.
-### Solicitudes (Requests)
+## Discovery System
 
-* Sustituye a la pantalla de chat tradicional.
-* Lista de solicitudes recibidas.
-* Visualización de proyectos activos.
-* Posibilidad de abrir una solicitud y ver más detalles.
-### Request Open – Detalle de solicitud
+- Feed de músicos
+- Sistema de like / pass
+- Prevención de perfiles repetidos
+- Match automático
 
-* Información del artista solicitante.
-* Descripción de la propuesta musical.
-* Acceso a redes sociales y contacto directo (email).
-* Botones de acción según tipo de cuenta:
-	+ Free: solo visualizar si ya hay match.
-	+ Premium: contacto abierto + propuesta libre.
+---
 
-## Tecnologías utilizadas
+## Collaboration Flow
 
-* Área	Stack
-* Diseño UI/UX	Figma
-* Desarrollo app	FlutterFlow / Flutter
-* Prototipado	Navegación interactiva integrada en Figma
-* Documentación	PDF / Memoria TFG
+- Solicitudes de colaboración
+- Inicio de proyectos
+- Gestión de matches activos
+- Cancelación de colaboraciones
+- Publicación de proyectos finalizados
 
-## Identidad visual
+---
 
-* Colores corporativos (inspirados en el logo)
-	+ #FF7A3D – naranja principal (acentos, CTA)
-	+ #6A5AE0 – morado secundario
-	+ #1C1C1C – fondo oscuro base
-* Grises: #2A2A2A, #3A3A3A, #ECECEC
-* Tipografías recomendadas:
-	+ Titulares: Montserrat / Poppins Bold
-	+ Texto base: Roboto / Inter Regular
+## Profile System
 
-# MatchBand/
-	+ assets/
-	+ screens/
-		- Start
-		- Login
-		- Register + Steps onboarding
-		- Home
-		- Explora+
-		- ExploraCanción
-		- Perfil
-		- Solicitudes + RequestOpen
-	+ README.md
-	+ Figma_project.fig
+- Banner visual de perfil
+- Información artística
+- Instrumentos y géneros
+- Estadísticas
+- Configuración de cuenta
 
-## Futuras mejoras
+---
 
-* Chat en tiempo real entre artistas.
-* Búsqueda por filtros avanzados (género, ubicación, instrumento etc.).
-* Marketplace de samples, stems y loops.
-* Sistema premium completo con solicitudes ilimitadas.
-* Integración de audio para subida de composiciones propias.
+# Tech Stack
 
-## Autor
+| Technology | Usage |
+|---|---|
+| Flutter | Frontend mobile |
+| Firebase Auth | Authentication |
+| Cloud Firestore | Database |
+| Dart | Application logic |
+| GitHub | Version control |
 
-Andrés Alberto Flores Velásquez
-Año 2025
+---
 
+# Project Structure
+
+```txt
+app/
+ ├── lib/
+ │    ├── screens/
+ │    ├── services/
+ │    ├── models/
+ │    └── widgets/
+ ├── android/
+ ├── ios/
+ └── pubspec.yaml
