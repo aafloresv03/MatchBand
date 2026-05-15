@@ -12,6 +12,11 @@ class ProjectService {
     required String title,
     required String description,
     required List<String> genres,
+    String? matchId,
+    List<String>? collaborators,
+    String? coverImage,
+    String? spotifyUrl,
+    String? youtubeUrl,
   }) async {
     final user = _auth.currentUser;
 
@@ -26,6 +31,13 @@ class ProjectService {
       "description": description,
       "genres": genres,
       "votes": 0,
+      "matchId": matchId,
+      "collaborators": collaborators ?? [user.uid],
+      "coverImage": coverImage ??
+          "https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200&auto=format&fit=crop",
+      "spotifyUrl": spotifyUrl ?? "",
+      "youtubeUrl": youtubeUrl ?? "",
+      "status": "published",
       "createdAt": FieldValue.serverTimestamp(),
     });
   }

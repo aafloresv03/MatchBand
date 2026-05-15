@@ -353,10 +353,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     key: ValueKey(user.uid),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(34),
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                          "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1200&auto=format&fit=crop",
-                        ),
+                      image: DecorationImage(
+                        image: NetworkImage(user.bannerImage),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -368,8 +366,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(.9),
+                            Colors.black.withOpacity(.05),
+                            Colors.black.withOpacity(.25),
+                            Colors.black.withOpacity(.92),
                           ],
                         ),
                       ),
@@ -377,6 +376,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor: Colors.orange.withOpacity(.2),
+                            backgroundImage: NetworkImage(user.profileImage),
+                          ),
+
+                          const SizedBox(height: 16),
+
                           Text(
                             user.artistAlias.isEmpty
                                 ? "Artista sin alias"
@@ -386,7 +393,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontWeight: FontWeight.w900,
                             ),
                           ),
+
                           const SizedBox(height: 8),
+
                           Text(
                             user.description.isEmpty
                                 ? "Sin descripción musical."
@@ -399,7 +408,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               height: 1.4,
                             ),
                           ),
+
                           const SizedBox(height: 14),
+
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -417,7 +428,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
+
                           const SizedBox(height: 18),
+
                           Wrap(
                             spacing: 10,
                             runSpacing: 10,
@@ -428,7 +441,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
+
                           const SizedBox(height: 26),
+
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

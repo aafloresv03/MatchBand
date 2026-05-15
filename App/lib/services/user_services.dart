@@ -57,6 +57,8 @@ class UserService {
 
     final usersSnapshot = await _db.collection("users").get();
 
+    print("TOTAL USERS FIRESTORE: ${usersSnapshot.docs.length}");
+
     final likesSnapshot = await _db
         .collection("likes")
         .where("fromUserId", isEqualTo: currentUserId)
@@ -67,12 +69,17 @@ class UserService {
         .where("fromUserId", isEqualTo: currentUserId)
         .get();
 
+    print("LIKES: ${likesSnapshot.docs.length}");
+    print("PASSES: ${passesSnapshot.docs.length}");
+
     final likedUserIds = likesSnapshot.docs
-        .map((doc) => doc["toUserId"] as String)
+        .map((doc) => doc.data()["toUserId"]?.toString() ?? "")
+        .where((id) => id.isNotEmpty)
         .toSet();
 
     final passedUserIds = passesSnapshot.docs
-        .map((doc) => doc["toUserId"] as String)
+        .map((doc) => doc.data()["toUserId"]?.toString() ?? "")
+        .where((id) => id.isNotEmpty)
         .toSet();
 
     final votedUserIds = {
@@ -84,19 +91,21 @@ class UserService {
       final data = doc.data();
 
       final userId = data["uid"]?.toString() ?? "";
+      final completed = data["profileCompleted"] == true;
+
+      print("USER CHECK: $userId | completed: $completed");
 
       if (userId.isEmpty) return false;
-
       if (userId == currentUserId) return false;
-
       if (votedUserIds.contains(userId)) return false;
-
-      if (data["profileCompleted"] != true) return false;
+      if (!completed) return false;
 
       return true;
     }).map((doc) {
       return AppUser.fromMap(doc.data());
     }).toList();
+
+    print("AVAILABLE USERS: ${availableUsers.length}");
 
     return availableUsers;
   }
@@ -109,6 +118,23 @@ class UserService {
     }
 
     return doc.data();
+  }
+
+  Future<void> updateProfileImages({
+    required String profileImage,
+    required String bannerImage,
+  }) async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception("No hay usuario autenticado.");
+    }
+
+    await _db.collection("users").doc(user.uid).update({
+      "profileImage": profileImage,
+      "bannerImage": bannerImage,
+      "updatedAt": FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> updateProfileBasicData({

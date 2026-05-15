@@ -49,9 +49,13 @@ class _RequestsScreenState extends State<RequestsScreen> {
     }
   }
 
-  Future<String> getUserAlias(String uid) async {
+  Future<Map<String, dynamic>> getUserData(String uid) async {
     final data = await userService.getUserById(uid);
-    return data?["artistAlias"] ?? "Usuario";
+
+    return {
+      "artistAlias": data?["artistAlias"]?.toString() ?? "Usuario",
+      "profileImage": data?["profileImage"]?.toString() ?? "",
+    };
   }
 
   Future<void> changeMatchStatus(String matchId, String status) async {
@@ -209,26 +213,29 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       itemBuilder: (context, index) {
                         final proposal = proposals[index];
 
-                        return FutureBuilder<String>(
-                          future: getUserAlias(proposal["fromUserId"]),
+                        return FutureBuilder<Map<String, dynamic>>(
+                          future: getUserData(proposal["fromUserId"]),
                           builder: (context, snapshot) {
+                            final userData = snapshot.data ?? {};
                             final alias =
-                                snapshot.data ?? "Cargando...";
+                                userData["artistAlias"] ?? "Cargando...";
+                            final profileImage =
+                                userData["profileImage"] ?? "";
                             final status =
                                 proposal["status"] ?? "pending";
 
                             return _CompactProposalCard(
                               alias: alias,
+                              profileImage: profileImage,
                               status: status,
                               onOpen: () async {
                                 await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        RequestDetailScreen(
-                                          proposal: proposal,
-                                          alias: alias,
-                                        ),
+                                    builder: (_) => RequestDetailScreen(
+                                      proposal: proposal,
+                                      alias: alias,
+                                    ),
                                   ),
                                 );
 
@@ -271,16 +278,19 @@ class _RequestsScreenState extends State<RequestsScreen> {
                         orElse: () => "",
                       );
 
-                      return FutureBuilder<String>(
-                        future: getUserAlias(otherUid),
+                      return FutureBuilder<Map<String, dynamic>>(
+                        future: getUserData(otherUid),
                         builder: (context, snapshot) {
+                          final userData = snapshot.data ?? {};
                           final alias =
-                              snapshot.data ?? "Cargando...";
-                          final status =
-                              match["status"] ?? "active";
+                              userData["artistAlias"] ?? "Cargando...";
+                          final profileImage =
+                              userData["profileImage"] ?? "";
+                          final status = match["status"] ?? "active";
 
                           return MatchCard(
                             title: alias,
+                            profileImage: profileImage,
                             statusText: status,
                             statusColor: statusColor(status),
                             onFinish: () => changeMatchStatus(
@@ -307,11 +317,13 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
 class _CompactProposalCard extends StatelessWidget {
   final String alias;
+  final String profileImage;
   final String status;
   final VoidCallback onOpen;
 
   const _CompactProposalCard({
     required this.alias,
+    required this.profileImage,
     required this.status,
     required this.onOpen,
   });
@@ -320,6 +332,7 @@ class _CompactProposalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _RequestsScreenState.statusColor(status);
     final label = _RequestsScreenState.statusLabel(status);
+    final hasImage = profileImage.trim().isNotEmpty;
 
     return GestureDetector(
       onTap: onOpen,
@@ -341,7 +354,10 @@ class _CompactProposalCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 26,
                   backgroundColor: Colors.orange.withOpacity(.16),
-                  child: Text(
+                  backgroundImage: hasImage ? NetworkImage(profileImage) : null,
+                  child: hasImage
+                      ? null
+                      : Text(
                     alias.isNotEmpty ? alias[0].toUpperCase() : "?",
                     style: const TextStyle(
                       color: Colors.orange,
@@ -402,6 +418,7 @@ class _CompactProposalCard extends StatelessWidget {
 
 class MatchCard extends StatelessWidget {
   final String title;
+  final String profileImage;
   final Color statusColor;
   final String statusText;
   final VoidCallback onFinish;
@@ -410,6 +427,7 @@ class MatchCard extends StatelessWidget {
   const MatchCard({
     super.key,
     required this.title,
+    required this.profileImage,
     required this.statusColor,
     required this.statusText,
     required this.onFinish,
@@ -420,6 +438,7 @@ class MatchCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = _RequestsScreenState.statusLabel(statusText);
     final isActive = statusText == "active";
+    final hasImage = profileImage.trim().isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -437,6 +456,23 @@ class MatchCard extends StatelessWidget {
         children: [
           Row(
             children: [
+              CircleAvatar(
+                radius: 25,
+                backgroundColor: Colors.orange.withOpacity(.16),
+                backgroundImage: hasImage ? NetworkImage(profileImage) : null,
+                child: hasImage
+                    ? null
+                    : Text(
+                  title.isNotEmpty ? title[0].toUpperCase() : "?",
+                  style: const TextStyle(
+                    color: Colors.orange,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 14),
+
               Expanded(
                 child: Text(
                   title,
@@ -446,6 +482,7 @@ class MatchCard extends StatelessWidget {
                   ),
                 ),
               ),
+
               Container(
                 width: 14,
                 height: 14,

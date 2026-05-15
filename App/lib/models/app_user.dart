@@ -8,6 +8,9 @@ class AppUser {
   final List<String> genres;
   final bool profileCompleted;
 
+  final String profileImage;
+  final String bannerImage;
+
   AppUser({
     required this.uid,
     required this.email,
@@ -17,6 +20,8 @@ class AppUser {
     required this.instruments,
     required this.genres,
     required this.profileCompleted,
+    required this.profileImage,
+    required this.bannerImage,
   });
 
   factory AppUser.fromMap(Map<String, dynamic> data) {
@@ -35,13 +40,15 @@ class AppUser {
             ),
           );
         }
+
         return {
           "name": item.toString(),
           "experience": "",
           "learningMethod": "",
         };
       }).toList();
-    } else if (rawInstruments is String && rawInstruments.isNotEmpty) {
+    } else if (rawInstruments is String &&
+        rawInstruments.isNotEmpty) {
       parsedInstruments = [
         {
           "name": rawInstruments,
@@ -54,8 +61,10 @@ class AppUser {
     List<String> parsedGenres = [];
 
     if (rawGenres is List) {
-      parsedGenres = rawGenres.map((item) => item.toString()).toList();
-    } else if (rawGenres is String && rawGenres.isNotEmpty) {
+      parsedGenres =
+          rawGenres.map((item) => item.toString()).toList();
+    } else if (rawGenres is String &&
+        rawGenres.isNotEmpty) {
       parsedGenres = [rawGenres];
     }
 
@@ -64,10 +73,20 @@ class AppUser {
       email: data["email"]?.toString() ?? "",
       artistAlias: data["artistAlias"]?.toString() ?? "",
       description: data["description"]?.toString() ?? "",
-      contactMethod: data["contactMethod"]?.toString() ?? "",
+      contactMethod:
+      data["contactMethod"]?.toString() ?? "",
       instruments: parsedInstruments,
       genres: parsedGenres,
-      profileCompleted: data["profileCompleted"] == true,
+      profileCompleted:
+      data["profileCompleted"] == true,
+
+      profileImage:
+      data["profileImage"]?.toString() ??
+          "https://i.pravatar.cc/300",
+
+      bannerImage:
+      data["bannerImage"]?.toString() ??
+          "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1200&auto=format&fit=crop",
     );
   }
 }

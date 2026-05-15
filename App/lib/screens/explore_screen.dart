@@ -1,183 +1,174 @@
 import 'package:flutter/material.dart';
 
+import '../models/project.dart';
+import '../services/project_service.dart';
 import '../widgets/bottom_nav.dart';
 import '../widgets/tag_widget.dart';
 
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'requests_screen.dart';
+import 'project_detail_screen.dart';
 
-class ExploreScreen extends StatelessWidget {
+class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
 
   @override
+  State<ExploreScreen> createState() => _ExploreScreenState();
+}
+
+class _ExploreScreenState extends State<ExploreScreen> {
+  final projectService = ProjectService();
+
+  bool isLoading = true;
+  List<Project> projects = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadProjects();
+  }
+
+  Future<void> loadProjects() async {
+    try {
+      final loadedProjects = await projectService.getProjects();
+
+      loadedProjects.sort((a, b) => b.votes.compareTo(a.votes));
+
+      if (!mounted) return;
+
+      setState(() {
+        projects = loadedProjects;
+        isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void goToTab(int index) {
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    }
+
+    if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const RequestsScreen()),
+      );
+    }
+
+    if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final topSong = {
-      "title": "Midnight Echoes",
-      "authors": "Alex Rivera · Lucía Martín",
-      "description":
-      "Canción indie rock colaborativa creada por músicos de la comunidad MatchBand.",
-      "cover":
-      "https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200&auto=format&fit=crop",
-      "votes": "1.248 votos",
-      "genre": "Indie Rock",
-    };
-
-    final songs = [
-      {
-        "title": "Neon Nights",
-        "authors": "Neon Collective",
-        "votes": "982 votos",
-      },
-      {
-        "title": "Acoustic Room",
-        "authors": "Emma Stone · Daniel Ross",
-        "votes": "846 votos",
-      },
-      {
-        "title": "Blue Noise",
-        "authors": "Carlos Vega",
-        "votes": "731 votos",
-      },
-    ];
-
-    final artists = [
-      {
-        "name": "Lucía Martín",
-        "info": "12 colaboraciones · 4.9★",
-      },
-      {
-        "name": "Daniel Ross",
-        "info": "9 colaboraciones · 4.8★",
-      },
-      {
-        "name": "Alex Rivera",
-        "info": "8 colaboraciones · 4.7★",
-      },
-    ];
+    final topProject = projects.isNotEmpty ? projects.first : null;
+    final rankingProjects = projects.length > 1 ? projects.skip(1).toList() : [];
 
     return Scaffold(
       bottomNavigationBar: BottomNav(
         currentIndex: 1,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const HomeScreen(),
-              ),
-            );
-          }
-
-          if (index == 2) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const RequestsScreen(),
-              ),
-            );
-          }
-
-          if (index == 3) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ProfileScreen(),
-              ),
-            );
-          }
-        },
+        onTap: goToTab,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Explora",
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 14,
+        child: isLoading
+            ? const Center(
+          child: CircularProgressIndicator(color: Colors.orange),
+        )
+            : RefreshIndicator(
+          color: Colors.orange,
+          onRefresh: loadProjects,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Explora",
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 14,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 6),
+                const SizedBox(height: 6),
 
-              const Text(
-                "Comunidad",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
+                const Text(
+                  "Comunidad",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
 
-              const Text(
-                "Descubre canciones, proyectos destacados y artistas con mayor actividad dentro de MatchBand.",
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 15,
-                  height: 1.5,
+                const Text(
+                  "Descubre proyectos publicados por colaboraciones reales dentro de MatchBand.",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 28),
+                const SizedBox(height: 28),
 
-              const Text(
-                "Canción más votada del mes",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+                if (projects.isEmpty)
+                  const _EmptyState()
+                else ...[
+                  const Text(
+                    "Proyecto destacado",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
 
-              const SizedBox(height: 14),
+                  const SizedBox(height: 14),
 
-              _FeaturedSongCard(song: topSong),
+                  _FeaturedProjectCard(project: topProject!),
 
-              const SizedBox(height: 30),
+                  const SizedBox(height: 30),
 
-              const Text(
-                "Top canciones",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+                  const Text(
+                    "Top proyectos",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
 
-              const SizedBox(height: 14),
+                  const SizedBox(height: 14),
 
-              ...songs.asMap().entries.map(
-                    (entry) => _RankingSongItem(
-                  position: entry.key + 1,
-                  title: entry.value["title"]!,
-                  authors: entry.value["authors"]!,
-                  votes: entry.value["votes"]!,
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              const Text(
-                "Artistas destacados",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              ...artists.asMap().entries.map(
-                    (entry) => _ArtistRankingItem(
-                  position: entry.key + 1,
-                  name: entry.value["name"]!,
-                  info: entry.value["info"]!,
-                ),
-              ),
-            ],
+                  if (rankingProjects.isEmpty)
+                    const _SmallEmptyCard(
+                      text: "Todavía no hay más proyectos publicados.",
+                    )
+                  else
+                    ...rankingProjects.asMap().entries.map(
+                          (entry) => _RankingProjectItem(
+                        position: entry.key + 2,
+                        project: entry.value,
+                      ),
+                    ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
@@ -185,15 +176,17 @@ class ExploreScreen extends StatelessWidget {
   }
 }
 
-class _FeaturedSongCard extends StatelessWidget {
-  final Map<String, String> song;
+class _FeaturedProjectCard extends StatelessWidget {
+  final Project project;
 
-  const _FeaturedSongCard({
-    required this.song,
+  const _FeaturedProjectCard({
+    required this.project,
   });
 
   @override
   Widget build(BuildContext context) {
+    final firstGenre = project.genres.isNotEmpty ? project.genres.first : "Proyecto";
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -209,7 +202,7 @@ class _FeaturedSongCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Image.network(
-              song["cover"]!,
+              project.coverImage,
               width: double.infinity,
               height: 240,
               fit: BoxFit.cover,
@@ -222,7 +215,7 @@ class _FeaturedSongCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  song["title"]!,
+                  project.title,
                   style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w900,
@@ -239,7 +232,7 @@ class _FeaturedSongCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  song["votes"]!,
+                  "${project.votes} votos",
                   style: const TextStyle(
                     color: Colors.orange,
                     fontWeight: FontWeight.w800,
@@ -253,7 +246,7 @@ class _FeaturedSongCard extends StatelessWidget {
           const SizedBox(height: 8),
 
           Text(
-            song["authors"]!,
+            project.artistAlias,
             style: const TextStyle(
               color: Colors.white70,
               fontSize: 14,
@@ -263,7 +256,7 @@ class _FeaturedSongCard extends StatelessWidget {
           const SizedBox(height: 14),
 
           Text(
-            song["description"]!,
+            project.description,
             style: const TextStyle(
               color: Colors.white70,
               height: 1.5,
@@ -273,8 +266,17 @@ class _FeaturedSongCard extends StatelessWidget {
 
           const SizedBox(height: 14),
 
-          TagWidget(text: song["genre"]!),
-
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              TagWidget(text: firstGenre),
+              if (project.spotifyUrl.isNotEmpty)
+                const TagWidget(text: "Spotify"),
+              if (project.youtubeUrl.isNotEmpty)
+                const TagWidget(text: "YouTube"),
+            ],
+          ),
           const SizedBox(height: 18),
 
           SizedBox(
@@ -282,7 +284,12 @@ class _FeaturedSongCard extends StatelessWidget {
             height: 54,
             child: ElevatedButton(
               onPressed: () {
-                // Próximo paso: navegar a ProjectDetailScreen.
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProjectDetailScreen(project: project),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
@@ -305,79 +312,131 @@ class _FeaturedSongCard extends StatelessWidget {
   }
 }
 
-class _RankingSongItem extends StatelessWidget {
+class _RankingProjectItem extends StatelessWidget {
   final int position;
-  final String title;
-  final String authors;
-  final String votes;
+  final Project project;
 
-  const _RankingSongItem({
+  const _RankingProjectItem({
     required this.position,
-    required this.title,
-    required this.authors,
-    required this.votes,
+    required this.project,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(.16),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Center(
-              child: Text(
-                "#$position",
-                style: const TextStyle(
-                  color: Colors.orange,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProjectDetailScreen(project: project),
           ),
-
-          const SizedBox(width: 14),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(.16),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Text(
+                  "#$position",
                   style: const TextStyle(
-                    fontSize: 16,
+                    color: Colors.orange,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  authors,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
+              ),
+            ),
+
+            const SizedBox(width: 14),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    project.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 5),
+
+                  Text(
+                    project.artistAlias,
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Text(
+              "${project.votes}",
+              style: const TextStyle(
+                color: Colors.orange,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(26),
+      ),
+      child: const Column(
+        children: [
+          Icon(
+            Icons.library_music,
+            color: Colors.orange,
+            size: 46,
+          ),
+          SizedBox(height: 16),
+          Text(
+            "Todavía no hay proyectos publicados",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
             ),
           ),
-
+          SizedBox(height: 10),
           Text(
-            votes,
-            style: const TextStyle(
-              color: Colors.orange,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
+            "Cuando una colaboración se finalice correctamente, aparecerá aquí.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white70,
+              height: 1.5,
             ),
           ),
         ],
@@ -386,71 +445,27 @@ class _RankingSongItem extends StatelessWidget {
   }
 }
 
-class _ArtistRankingItem extends StatelessWidget {
-  final int position;
-  final String name;
-  final String info;
+class _SmallEmptyCard extends StatelessWidget {
+  final String text;
 
-  const _ArtistRankingItem({
-    required this.position,
-    required this.name,
-    required this.info,
+  const _SmallEmptyCard({
+    required this.text,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(22),
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 23,
-            backgroundColor: Colors.orange.withOpacity(.16),
-            child: Text(
-              "$position",
-              style: const TextStyle(
-                color: Colors.orange,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 14),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  info,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const Icon(
-            Icons.star,
-            color: Colors.orange,
-            size: 20,
-          ),
-        ],
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white60,
+        ),
       ),
     );
   }

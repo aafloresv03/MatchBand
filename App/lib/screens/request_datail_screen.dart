@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/match_services.dart';
 import 'cancel_colaboration_screen.dart';
+import 'finish_project_screen.dart';
 
 class RequestDetailScreen extends StatefulWidget {
   final Map<String, dynamic> proposal;
@@ -250,7 +251,27 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                   label: "Finalizar y publicar proyecto",
                   color: Colors.orange,
                   loading: isLoading,
-                  onTap: () {},
+                  onTap: () async {
+                    final matchId = "${widget.proposal["fromUserId"]}_${widget.proposal["toUserId"]}";
+
+                    final updated = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FinishProjectScreen(
+                          proposalId: widget.proposal["id"],
+                          matchId: matchId,
+                          collaborators: [
+                            widget.proposal["fromUserId"],
+                            widget.proposal["toUserId"],
+                          ],
+                        ),
+                      ),
+                    );
+
+                    if (updated == true && mounted) {
+                      Navigator.pop(context, true);
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 14),

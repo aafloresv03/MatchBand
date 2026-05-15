@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../models/app_user.dart';
 import '../models/onboarding_data.dart';
 import '../services/user_services.dart';
 import '../widgets/bottom_nav.dart';
@@ -11,6 +12,7 @@ import 'edit_profile_screen.dart';
 import 'explore_screen.dart';
 import 'home_screen.dart';
 import 'requests_screen.dart';
+import 'select_profile_image_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -23,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final userService = UserService();
 
   bool isLoading = true;
+  AppUser? currentUserData;
 
   @override
   void initState() {
@@ -31,6 +34,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> loadProfileData() async {
+    setState(() {
+      isLoading = true;
+    });
+
     final userData = await userService.getCurrentUserData();
 
     if (userData != null) {
@@ -44,6 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!mounted) return;
 
     setState(() {
+      currentUserData = userData;
       isLoading = false;
     });
   }
@@ -123,6 +131,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final instruments = OnboardingData.instruments;
     final genres = OnboardingData.genres;
 
+    final profileImage = currentUserData?.profileImage ??
+        "https://i.pravatar.cc/300";
+
+    final bannerImage = currentUserData?.bannerImage ??
+        "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1200&auto=format&fit=crop";
+
     return Scaffold(
       bottomNavigationBar: BottomNav(
         currentIndex: 3,
@@ -165,11 +179,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       }
 
                       if (value == "image") {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Función pendiente: imagen de perfil."),
+                        final updated = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SelectProfileImageScreen(),
                           ),
                         );
+
+                        if (updated == true && context.mounted) {
+                          await loadProfileData();
+                        }
                       }
 
                       if (value == "privacy") {
@@ -219,10 +238,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(34),
-                  image: const DecorationImage(
-                    image: NetworkImage(
-                      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1200&auto=format&fit=crop",
-                    ),
+                  image: DecorationImage(
+                    image: NetworkImage(bannerImage),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -244,6 +261,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      CircleAvatar(
+                        radius: 38,
+                        backgroundColor: Colors.orange.withOpacity(.2),
+                        backgroundImage: NetworkImage(profileImage),
+                      ),
+
+                      const SizedBox(height: 16),
+
                       Text(
                         artistAlias,
                         style: const TextStyle(
@@ -401,6 +426,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               _FeaturedProjectCard(
                 artistAlias: artistAlias,
+                bannerImage: bannerImage,
               ),
 
               const SizedBox(height: 24),
@@ -599,9 +625,11 @@ class _StatBox extends StatelessWidget {
 
 class _FeaturedProjectCard extends StatelessWidget {
   final String artistAlias;
+  final String bannerImage;
 
   const _FeaturedProjectCard({
     required this.artistAlias,
+    required this.bannerImage,
   });
 
   @override
@@ -611,10 +639,8 @@ class _FeaturedProjectCard extends StatelessWidget {
       width: 230,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        image: const DecorationImage(
-          image: NetworkImage(
-            "https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200&auto=format&fit=crop",
-          ),
+        image: DecorationImage(
+          image: NetworkImage(bannerImage),
           fit: BoxFit.cover,
         ),
       ),
