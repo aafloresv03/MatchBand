@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../models/app_user.dart';
 import '../models/onboarding_data.dart';
+import '../models/project.dart';
+import '../services/project_service.dart';
 import '../services/user_services.dart';
 import '../widgets/bottom_nav.dart';
 import '../widgets/tag_widget.dart';
@@ -11,6 +13,7 @@ import 'auth_gate.dart';
 import 'edit_profile_screen.dart';
 import 'explore_screen.dart';
 import 'home_screen.dart';
+import 'project_detail_screen.dart';
 import 'requests_screen.dart';
 import 'select_profile_image_screen.dart';
 
@@ -23,9 +26,11 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final userService = UserService();
+  final projectService = ProjectService();
 
   bool isLoading = true;
   AppUser? currentUserData;
+  List<Project> userProjects = [];
 
   @override
   void initState() {
@@ -39,6 +44,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     final userData = await userService.getCurrentUserData();
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+
+    List<Project> loadedProjects = [];
+
+    if (currentUid != null) {
+      loadedProjects = await projectService.getUserProjects(currentUid);
+    }
 
     if (userData != null) {
       OnboardingData.artistAlias = userData.artistAlias;
@@ -52,6 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() {
       currentUserData = userData;
+      userProjects = loadedProjects;
       isLoading = false;
     });
   }
@@ -131,8 +144,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final instruments = OnboardingData.instruments;
     final genres = OnboardingData.genres;
 
-    final profileImage = currentUserData?.profileImage ??
-        "https://i.pravatar.cc/300";
+    final profileImage =
+        currentUserData?.profileImage ?? "https://i.pravatar.cc/300";
 
     final bannerImage = currentUserData?.bannerImage ??
         "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1200&auto=format&fit=crop";
@@ -143,294 +156,315 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onTap: goToTab,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Perfil",
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 14,
+        child: RefreshIndicator(
+          color: Colors.orange,
+          onRefresh: loadProfileData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Perfil",
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                  PopupMenuButton<String>(
-                    color: const Color(0xFF1E1E1E),
-                    icon: const Icon(
-                      Icons.settings,
-                      color: Colors.orange,
-                    ),
-                    onSelected: (value) async {
-                      if (value == "edit") {
-                        final updated = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const EditProfileScreen(),
-                          ),
-                        );
+                    PopupMenuButton<String>(
+                      color: const Color(0xFF1E1E1E),
+                      icon: const Icon(
+                        Icons.settings,
+                        color: Colors.orange,
+                      ),
+                      onSelected: (value) async {
+                        if (value == "edit") {
+                          final updated = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EditProfileScreen(),
+                            ),
+                          );
 
-                        if (updated == true && context.mounted) {
-                          await loadProfileData();
+                          if (updated == true && context.mounted) {
+                            await loadProfileData();
+                          }
                         }
-                      }
 
-                      if (value == "image") {
-                        final updated = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const SelectProfileImageScreen(),
-                          ),
-                        );
+                        if (value == "image") {
+                          final updated = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SelectProfileImageScreen(),
+                            ),
+                          );
 
-                        if (updated == true && context.mounted) {
-                          await loadProfileData();
+                          if (updated == true && context.mounted) {
+                            await loadProfileData();
+                          }
                         }
-                      }
 
-                      if (value == "privacy") {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Función pendiente: privacidad."),
-                          ),
-                        );
-                      }
+                        if (value == "privacy") {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Función pendiente: privacidad."),
+                            ),
+                          );
+                        }
 
-                      if (value == "logout") {
-                        _showLogoutDialog(context);
-                      }
-                    },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(
-                        value: "edit",
-                        child: Text("Editar perfil"),
-                      ),
-                      PopupMenuItem(
-                        value: "image",
-                        child: Text("Imagen de perfil"),
-                      ),
-                      PopupMenuItem(
-                        value: "privacy",
-                        child: Text("Privacidad"),
-                      ),
-                      PopupMenuDivider(),
-                      PopupMenuItem(
-                        value: "logout",
-                        child: Text(
-                          "Cerrar sesión",
-                          style: TextStyle(
-                            color: Colors.redAccent,
+                        if (value == "logout") {
+                          _showLogoutDialog(context);
+                        }
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(
+                          value: "edit",
+                          child: Text("Editar perfil"),
+                        ),
+                        PopupMenuItem(
+                          value: "image",
+                          child: Text("Imagen de perfil"),
+                        ),
+                        PopupMenuItem(
+                          value: "privacy",
+                          child: Text("Privacidad"),
+                        ),
+                        PopupMenuDivider(),
+                        PopupMenuItem(
+                          value: "logout",
+                          child: Text(
+                            "Cerrar sesión",
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 10),
-
-              Container(
-                height: 390,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(34),
-                  image: DecorationImage(
-                    image: NetworkImage(bannerImage),
-                    fit: BoxFit.cover,
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
+
+                const SizedBox(height: 10),
+
+                Container(
+                  height: 390,
+                  width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(34),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withOpacity(.05),
-                        Colors.black.withOpacity(.25),
-                        Colors.black.withOpacity(.98),
+                    image: DecorationImage(
+                      image: NetworkImage(bannerImage),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(34),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(.05),
+                          Colors.black.withOpacity(.25),
+                          Colors.black.withOpacity(.98),
+                        ],
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(
+                          radius: 38,
+                          backgroundColor: Colors.orange.withOpacity(.2),
+                          backgroundImage: NetworkImage(profileImage),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        Text(
+                          artistAlias,
+                          style: const TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            if (genres.isEmpty)
+                              const TagWidget(text: "Sin géneros")
+                            else
+                              ...genres.map(
+                                    (genre) => TagWidget(text: genre),
+                              ),
+
+                            if (instruments.isNotEmpty)
+                              TagWidget(
+                                text:
+                                instruments.first["name"] ?? "Instrumento",
+                              ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CircleAvatar(
-                        radius: 38,
-                        backgroundColor: Colors.orange.withOpacity(.2),
-                        backgroundImage: NetworkImage(profileImage),
-                      ),
+                ),
 
-                      const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
-                      Text(
-                        artistAlias,
-                        style: const TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          if (genres.isEmpty)
-                            const TagWidget(text: "Sin géneros")
-                          else
-                            ...genres.map(
-                                  (genre) => TagWidget(text: genre),
-                            ),
-
-                          if (instruments.isNotEmpty)
-                            TagWidget(
-                              text: instruments.first["name"] ?? "Instrumento",
-                            ),
-                        ],
-                      ),
-                    ],
+                Text(
+                  description,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 15,
+                    height: 1.5,
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-              Text(
-                description,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 15,
-                  height: 1.5,
+                _InfoBox(
+                  title: "Método de contacto",
+                  value: contactMethod,
+                  icon: Icons.alternate_email,
                 ),
-              ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 28),
 
-              _InfoBox(
-                title: "Método de contacto",
-                value: contactMethod,
-                icon: Icons.alternate_email,
-              ),
-
-              const SizedBox(height: 28),
-
-              const Text(
-                "Instrumentos",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                const Text(
+                  "Instrumentos",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 14),
+                const SizedBox(height: 14),
 
-              if (instruments.isEmpty)
-                const _InfoBox(
-                  title: "Sin instrumentos añadidos",
-                  value: "Completa el onboarding para mostrar tus instrumentos.",
-                  icon: Icons.music_note,
-                )
-              else
-                ...instruments.map(
-                      (instrument) => Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: _InstrumentCard(
-                      name: instrument["name"] ?? "Instrumento",
-                      experience: instrument["experience"] ?? "Sin experiencia",
-                      learningMethod:
-                      instrument["learningMethod"] ?? "Sin método indicado",
+                if (instruments.isEmpty)
+                  const _InfoBox(
+                    title: "Sin instrumentos añadidos",
+                    value:
+                    "Completa el onboarding para mostrar tus instrumentos.",
+                    icon: Icons.music_note,
+                  )
+                else
+                  ...instruments.map(
+                        (instrument) => Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: _InstrumentCard(
+                        name: instrument["name"] ?? "Instrumento",
+                        experience:
+                        instrument["experience"] ?? "Sin experiencia",
+                        learningMethod:
+                        instrument["learningMethod"] ??
+                            "Sin método indicado",
+                      ),
                     ),
                   ),
+
+                const SizedBox(height: 18),
+
+                const Text(
+                  "Géneros",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
 
-              const SizedBox(height: 18),
+                const SizedBox(height: 14),
 
-              const Text(
-                "Géneros",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              if (genres.isEmpty)
-                const _InfoBox(
-                  title: "Sin géneros añadidos",
-                  value: "Completa el onboarding para mostrar tus géneros.",
-                  icon: Icons.library_music,
-                )
-              else
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: genres
-                      .map(
-                        (genre) => TagWidget(text: genre),
+                if (genres.isEmpty)
+                  const _InfoBox(
+                    title: "Sin géneros añadidos",
+                    value: "Completa el onboarding para mostrar tus géneros.",
+                    icon: Icons.library_music,
                   )
-                      .toList(),
+                else
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: genres
+                        .map(
+                          (genre) => TagWidget(text: genre),
+                    )
+                        .toList(),
+                  ),
+
+                const SizedBox(height: 28),
+
+                const Text(
+                  "Actividad",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
 
-              const SizedBox(height: 28),
+                const SizedBox(height: 14),
 
-              const Text(
-                "Actividad",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                Row(
+                  children: [
+                    const _StatBox(
+                      value: "0",
+                      label: "Colabs",
+                    ),
+                    const SizedBox(width: 12),
+                    _StatBox(
+                      value: "${userProjects.length}",
+                      label: "Proyectos",
+                    ),
+                    const SizedBox(width: 12),
+                    const _StatBox(
+                      value: "-",
+                      label: "Rating",
+                    ),
+                  ],
                 ),
-              ),
 
-              const SizedBox(height: 14),
+                const SizedBox(height: 30),
 
-              const Row(
-                children: [
-                  _StatBox(
-                    value: "0",
-                    label: "Colabs",
+                const Text(
+                  "Mis proyectos",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
                   ),
-                  SizedBox(width: 12),
-                  _StatBox(
-                    value: "0",
-                    label: "Proyectos",
-                  ),
-                  SizedBox(width: 12),
-                  _StatBox(
-                    value: "-",
-                    label: "Rating",
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-
-              const Text(
-                "Proyecto destacado",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              _FeaturedProjectCard(
-                artistAlias: artistAlias,
-                bannerImage: bannerImage,
-              ),
+                if (userProjects.isEmpty)
+                  const _EmptyProjectsCard()
+                else
+                  SizedBox(
+                    height: 185,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: userProjects.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 14),
+                      itemBuilder: (context, index) {
+                        final project = userProjects[index];
 
-              const SizedBox(height: 24),
-            ],
+                        return _ProfileProjectCard(project: project);
+                      },
+                    ),
+                  ),
+
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),
@@ -623,62 +657,98 @@ class _StatBox extends StatelessWidget {
   }
 }
 
-class _FeaturedProjectCard extends StatelessWidget {
-  final String artistAlias;
-  final String bannerImage;
-
-  const _FeaturedProjectCard({
-    required this.artistAlias,
-    required this.bannerImage,
-  });
+class _EmptyProjectsCard extends StatelessWidget {
+  const _EmptyProjectsCard();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 150,
-      width: 230,
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        image: DecorationImage(
-          image: NetworkImage(bannerImage),
-          fit: BoxFit.cover,
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withOpacity(.05),
         ),
       ),
+      child: const Text(
+        "Todavía no has publicado ningún proyecto.",
+        style: TextStyle(
+          color: Colors.white60,
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileProjectCard extends StatelessWidget {
+  final Project project;
+
+  const _ProfileProjectCard({
+    required this.project,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProjectDetailScreen(project: project),
+          ),
+        );
+      },
       child: Container(
-        padding: const EdgeInsets.all(18),
+        height: 185,
+        width: 250,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              Colors.black.withOpacity(.9),
-            ],
+          image: DecorationImage(
+            image: NetworkImage(project.coverImage),
+            fit: BoxFit.cover,
           ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Primer proyecto",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-              ),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.black.withOpacity(.9),
+              ],
             ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              artistAlias,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 12,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                project.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 4),
+
+              Text(
+                "${project.votes} votos",
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

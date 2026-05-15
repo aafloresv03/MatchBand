@@ -60,4 +60,55 @@ class ProjectService {
         .map((doc) => Project.fromMap(doc.id, doc.data()))
         .toList();
   }
+
+  Future<bool> hasUserVotedProject(String projectId) async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception("No hay usuario autenticado.");
+    }
+
+    final voteId = "${user.uid}_$projectId";
+
+    final doc = await _db.collection("project_votes").doc(voteId).get();
+
+    return doc.exists;
+  }
+
+  Future<void> voteProject(String projectId) async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception("No hay usuario autenticado.");
+    }
+
+    final voteId = "${user.uid}_$projectId";
+    final voteRef = _db.collection("project_votes").doc(voteId);
+    final projectRef = _db.collection("projects").doc(projectId);
+
+    await _db.runTransaction((transaction) async {
+      final voteDoc = await transaction.get(voteRef);
+
+      if (voteDoc.exists) {
+        throw Exception("Ya has votado este proyecto.");
+      }
+
+      final projectDoc = await transaction.get(projectRef);
+
+      if (!projectDoc.exists) {
+        throw Exception("El proyecto no existe.");
+      }
+
+      transaction.set(voteRef, {
+        "projectId": projectId,
+        "userId": user.uid,
+        "createdAt": FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(projectRef, {
+        "votes": FieldValue.increment(1),
+        "updatedAt": FieldValue.serverTimestamp(),
+      });
+    });
+  }
 }
