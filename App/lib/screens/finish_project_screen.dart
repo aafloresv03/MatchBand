@@ -10,7 +10,7 @@ class FinishProjectScreen extends StatefulWidget {
 
   const FinishProjectScreen({
     super.key,
-    required this.proposalId,
+    this.proposalId = "",
     required this.matchId,
     required this.collaborators,
   });
@@ -104,10 +104,12 @@ class _FinishProjectScreenState extends State<FinishProjectScreen> {
         status: "finished",
       );
 
-      await matchService.updateProposalStatus(
-        proposalId: widget.proposalId,
-        status: "finished",
-      );
+      if (widget.proposalId.isNotEmpty) {
+        await matchService.updateProposalStatus(
+          proposalId: widget.proposalId,
+          status: "finished",
+        );
+      }
 
       if (!mounted) return;
 

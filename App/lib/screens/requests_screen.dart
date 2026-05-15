@@ -9,6 +9,7 @@ import 'explore_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'request_datail_screen.dart';
+import 'finish_project_screen.dart';
 
 class RequestsScreen extends StatefulWidget {
   const RequestsScreen({super.key});
@@ -293,10 +294,20 @@ class _RequestsScreenState extends State<RequestsScreen> {
                             profileImage: profileImage,
                             statusText: status,
                             statusColor: statusColor(status),
-                            onFinish: () => changeMatchStatus(
-                              match["id"],
-                              "finished",
-                            ),
+                            onFinish: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => FinishProjectScreen(
+                                    proposalId: match["proposalId"] ?? "",
+                                    matchId: match["id"],
+                                    collaborators: List<String>.from(match["users"] ?? []),
+                                  ),
+                                ),
+                              );
+
+                              loadRequests();
+                            },
                             onCancel: () => changeMatchStatus(
                               match["id"],
                               "cancelled",
